@@ -36,27 +36,29 @@ Computer Configuration > Policies > Windows Settings > Security Settings > Windo
 Add an allow rule for Windows Remote Management for both public and domain profile.
 
 ![Screenshot](screens/4.png)
+![Screenshot](screens/5.png)
 
 **c. add Event Log Readers Group**
 
 Next, we need to add the server which is going do collect the events a permission to actually read the events.
- Run computer management as administrator, go to Local Users and Groups > Groups > Event log readers
-
-![Screenshot](screens/4.png)
+ Run computer management as administrator, go to 
+ ```
+ Local Users and Groups > Groups > Event log readers
+```
 
 Select Groups > Event Log Readers > Add
 
-![Screenshot](screens/5.png)
+![Screenshot](screens/6.png)
 
 There&#39;s a need to add computers to filtered object types, so we can search for our server.
 
-![Screenshot](screens/6.png)
+![Screenshot](screens/7.png)
 
 **d. add Event Log Readers Group using GPO**
 
 How to automate it? We will use a PowerShell script. Let&#39;s open the PowerShell ISE
 
-![Screenshot](screens/6.png)
+![Screenshot](screens/8.png)
 ```
 add-localgroupmember -group "Event Log Readers" -Member "OurDomainName\ServerHostname$";
 ```
@@ -64,7 +66,8 @@ Save it to  **C:\Windows\SYSVOL\sysvol\OurDomainName\scripts**  on our  **Domain
 ```
 Computer Configuration > Policies > Windows Settings > Scripts > Startup > PowerShell Scripts > Add
 ```
-![Screenshot](screens/7.png)
+![Screenshot](screens/9.png)
+![Screenshot](screens/10.png)
 
 # **Server side**
 
@@ -72,15 +75,15 @@ Computer Configuration > Policies > Windows Settings > Scripts > Startup > Power
 
 Now we will set the server which is going to receive the logs. Open the Event Viewer, go to subscriptions and select &#39;yes&#39; in the prompt as we want the service to be automatically started.
 
-![Screenshot](screens/8.png)
+![Screenshot](screens/11.png)
 
 Create a new Subscription:
 
-![Screenshot](screens/9.png)
+![Screenshot](screens/12.png)
 
 In Advanced select Minimize Latency to reduce the [delivery to 30 seconds ](https://docs.microsoft.com/en-us/windows/security/threat-protection/use-windows-event-forwarding-to-assist-in-intrusion-detection#how-frequently-are-wef-events-delivered)
 
-![Screenshot](screens/10.png)
+![Screenshot](screens/13.png)
 
 In this proof of concept, we want to receive only logs from Microsoft Defender.
  Select events > XML > and "yes" and paste the following XML
@@ -93,11 +96,11 @@ In this proof of concept, we want to receive only logs from Microsoft Defender.
 </QueryList>
 ```
 
-![Screenshot](screens/11.png)
+![Screenshot](screens/14.png)
 
 After that we can connect our client in Select Computers \&gt; Add Domain Computers. We can also test the connection after adding.
 
-![Screenshot](screens/12.png)
+![Screenshot](screens/15.png)
 
 **b. Email notification**
 
@@ -105,15 +108,15 @@ Last but not least, we will use Task Schleuder to trigger a PowerShell script se
 
 Set the account to SYSTEM and select to Run with highest privileges.
 
-![Screenshot](screens/13.png)
+![Screenshot](screens/16.png)
 
 We will select the triggering based on [Microsoft IDs base](https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-antivirus/troubleshoot-microsoft-defender-antivirus). Note, that there are two IDs we are interested in – 1006 and 1116. We can only paste one so there will be a need for two Tasks.
 
-![Screenshot](screens/14.png)
+![Screenshot](screens/17.png)
 
 Before creating an action, we need to set up our email script.
 
-![Screenshot](screens/15.png)
+![Screenshot](screens/18.png)
 
 ```
 $Username = "username - our email in google";
@@ -140,7 +143,7 @@ Send-ToEmail  -email "paste the receiver email here";
 
 Let&#39;s save it and go back to our Event Schleuder in the Actions tab.
 
-![Screenshot](screens/16.png)
+![Screenshot](screens/19.png)
 
 Program should be set to &#39; **powershell**&#39; and in the Argument section paste the path to your saved script
 ```
@@ -148,55 +151,55 @@ Program should be set to &#39; **powershell**&#39; and in the Argument section p
 ```
 Deselect the AC power option in Conditions tab
 
-![Screenshot](screens/17.png)
+![Screenshot](screens/20.png)
 
 And set to run new instance in paralel in settings tab
 
-![Screenshot](screens/18.png)
+![Screenshot](screens/21.png)
 
 Now do the same for the second malware found ID – 1116
 
-![Screenshot](screens/18.png)
+![Screenshot](screens/22.png)
 
 # **Testing**
 
 Let&#39;s check the connection again, this time we will be using Runtime status. You will use it many times in the future to troubleshoot issues. Everything&#39;s looking alright.
 
-![Screenshot](screens/19.png)
+![Screenshot](screens/23.png)
 
 No let&#39;s check the forwarded Event&#39;s tab.
 Looks good!
 
-![Screenshot](screens/20.png)
+![Screenshot](screens/24.png)
 
 There will be a lot of logs we&#39;re not interested in like a successful definition update, schleuded scan notification etc.
  There&#39;s a need for creating a custom view to filter out the noise.
 
 Select the &#39;create custom view&#39; option
 
-![Screenshot](screens/21.png)
+![Screenshot](screens/25.png)
 
 And let&#39;s concentrate only on our two &#39;malware found&#39; IDs.
 
-![Screenshot](screens/22.png)
+![Screenshot](screens/26.png)
 
 Let&#39;s try it out! Use the Eicar test file which is used to test anti malware software at eicar.org
 
 Download the zip file and open it. You can safely ignore the SmartScreen warning in this case.
 
-![Screenshot](screens/23.png)
+![Screenshot](screens/27.png)
 
 We triggered a detection!
 
-![Screenshot](screens/24.png)
+![Screenshot](screens/28.png)
 
 And here are our results (In Polish as I needed to change the language :D)
 
-![Screenshot](screens/25.png)
+![Screenshot](screens/29.png)
 
 We also received an email!
 
-![Screenshot](screens/26.png)
+![Screenshot](screens/30.png)
 
 # **Conclusion**
 
